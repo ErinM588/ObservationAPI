@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observations API — Kashmir World Foundation</title>
+<style>
+  :root {
+    /* Kashmir World Foundation palette */
+    --bg: #fff6ef;          /* cream */
+    --surface: #ffffff;
+    --surface2: #f4ece4;
+    --border: #e6e0de;
+    --text: #1d0e03;        /* dark brown */
+    --text2: #6b5d52;
+    --accent: #014b3f;      /* KWF dark green */
+    --accent-dim: #013b32;
+    --green: #02ca81;
+    --red: #c0392b;
+    --orange: #ff5e1a;      /* KWF orange */
+    --radius: 10px;
+    --mono: 'Consolas', 'Courier New', monospace;
+    --sans: Arial, Helvetica, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.55;
+  }
+
+  /* ── Layout ────────────────────────────────────── */
+  header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 2.5rem;
+    border-bottom: 3px solid var(--orange);
+    background: var(--accent);
+    color: #fff6ef;
+  }
+  header .logo {
+    height: 52px; width: auto; border-radius: 6px; background: #fff;
+    padding: 3px;
+  }
+  header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -.02em; }
+  header .subtitle { font-size: .75rem; color: #cfe4dd; }
+  header .pill {
+    margin-left: auto; font-family: var(--mono); font-size: .75rem;
+    padding: .3rem .7rem; border-radius: 999px;
+    background: rgba(255,246,239,.12); color: #cfe4dd;
+    border: 1px solid rgba(255,246,239,.25);
+  }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
+
+  /* ── Tabs ───────────────────────────────────────── */
+  .tabs {
+    display: flex; gap: .35rem; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+  .tab-btn {
+    font-family: var(--sans); font-size: .85rem; font-weight: 500;
+    padding: .65rem 1.2rem; cursor: pointer;
+    background: none; border: none; color: var(--text2);
+    border-bottom: 2px solid transparent;
+    transition: color .2s, border-color .2s;
+  }
+  .tab-btn:hover { color: var(--accent); }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 700; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeUp .25s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Cards & Tables ─────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(29,14,3,.06);
+  }
+  .card h2 {
+    font-size: .95rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent);
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .card h2 .badge {
+    font-family: var(--mono); font-size: .7rem;
+    padding: .15rem .55rem; border-radius: 999px;
+    font-weight: 500;
+  }
+  .badge-get { background: #02ca8122; color: #017a4e; }
+  .badge-post { background: #ff5e1a22; color: var(--orange); }
+
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th { text-align: left; color: var(--text2); font-weight: 600; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
+  td { padding: .6rem .8rem; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: .8rem; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  .reports-list { list-style: none; padding-left: .6rem; }
+  .reports-list li { margin-bottom: .4rem; font-size: .78rem; color: var(--text2); }
+  .reports-list li strong { color: var(--text); font-weight: 600; }
+
+  /* ── Forms ──────────────────────────────────────── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: .85rem;
+  }
+  .form-group { display: flex; flex-direction: column; gap: .3rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  fieldset.form-section {
+    grid-column: 1 / -1; border: 1px solid var(--border); border-radius: 8px;
+    padding: .9rem; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .85rem;
+  }
+  fieldset.form-section legend {
+    font-size: .75rem; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: .04em; padding: 0 .4rem;
+  }
+  label { font-size: .78rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+  input, textarea {
+    font-family: var(--mono); font-size: .85rem;
+    padding: .55rem .75rem; border-radius: 8px;
+    border: 1px solid var(--border); background: #fff; color: var(--text);
+    outline: none; transition: border-color .2s;
+  }
+  input:focus, textarea:focus { border-color: var(--orange); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .btn {
+    font-family: var(--sans); font-weight: 700; font-size: .82rem;
+    padding: .6rem 1.4rem; border: none; border-radius: 8px;
+    cursor: pointer; transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff6ef; }
+  .btn-primary:hover { background: var(--accent-dim); }
+  .btn-orange { background: var(--orange); color: #fff; }
+  .btn-orange:hover { background: #e04f12; }
+  .btn-outline {
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-outline:hover { background: var(--accent); color: #fff6ef; }
+  .btn-sm { padding: .35rem .8rem; font-size: .75rem; }
+  .btn-danger { background: var(--red); color: #fff; }
+
+  .actions { display: flex; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
+
+  /* ── Response viewer ────────────────────────────── */
+  .response-box {
+    margin-top: 1.2rem; border-radius: var(--radius);
+    background: #fdfaf7; border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .response-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .55rem .9rem; background: var(--surface2);
+    font-family: var(--mono); font-size: .75rem; color: var(--text2);
+  }
+  .status { padding: .15rem .5rem; border-radius: 999px; font-weight: 700; font-size: .7rem; }
+  .status-ok { background: #02ca8122; color: #017a4e; }
+  .status-err { background: #c0392b22; color: var(--red); }
+  .response-body { padding: 1rem; font-family: var(--mono); font-size: .78rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto; color: var(--text); }
+
+  /* ── Health indicator ───────────────────────────── */
+  .health-indicator {
+    display: inline-flex; align-items: center; gap: .6rem;
+    font-size: 1rem; font-weight: 700; margin-top: 1rem;
+  }
+  .health-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--text2); }
+  .health-dot.ok { background: var(--green); }
+  .health-dot.fail { background: var(--red); }
+
+  /* ── Utilities ──────────────────────────────────── */
+  .mt { margin-top: 1rem; }
+  .mb { margin-bottom: 1rem; }
+  .empty { text-align: center; color: var(--text2); padding: 2rem; font-size: .9rem; }
+  .hint { font-size:.82rem; color:var(--text2); margin-bottom:1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="https://static.wixstatic.com/media/0cb105_55fe65ad2fc7446a8f8a48376caffcd5~mv2.gif" alt="Kashmir World Foundation logo"
+       onerror="this.style.display='none'">
+  <div>
+    <h1>Observations API</h1>
+    <div class="subtitle">Kashmir World Foundation — Drone Observation Records</div>
+  </div>
+  <span class="pill">TinyDB + Flask</span>
+</header>
+
+<main>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="browse">Browse</button>
+    <button class="tab-btn" data-tab="create">Create Observation</button>
+    <button class="tab-btn" data-tab="search">Search</button>
+    <button class="tab-btn" data-tab="flight">By Flight</button>
+    <button class="tab-btn" data-tab="report">Add Report</button>
+    <button class="tab-btn" data-tab="health">Health</button>
+    <button class="tab-btn" data-tab="docs">API Docs</button>
+  </div>
+
+  <!-- ─── Browse ─────────────────────────────── -->
+  <div class="tab-panel active" id="tab-browse">
+    <div class="card">
+      <h2><span class="badge badge-get">GET</span> All Observations</h2>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="loadPoints()">Fetch All Observations</button>
+      </div>
+      <div id="points-table" class="mt"></div>
+    </div>
+  </div>
+
+  <!-- ─── Create ─────────────────────────────── -->
+  <div class="tab-panel" id="tab-create">
+    <div class="card">
+      <h2><span class="badge badge-post">POST</span> Create an Observation</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Name</label>
+          <input id="c-name" placeholder="e.g. Snow Leopard Sighting — Hirpora">
+        </div>
+        <div class="form-group">
+          <label>Latitude</label>
+          <input id="c-lat" type="number" step="any" placeholder="33.6844">
+        </div>
+        <div class="form-group">
+          <label>Longitude</label>
+          <input id="c-lon" type="number" step="any" placeholder="74.6600">
+        </div>
+        <div class="form-group">
+          <label>Altitude (m)</label>
+          <input id="c-alt" type="number" step="any" placeholder="3100">
+        </div>
+        <div class="form-group">
+          <label>Flight Number</label>
+          <input id="c-flight" type="number" placeholder="105">
+        </div>
+        <div class="form-group">
+          <label>Observed At (date)</label>
+          <input id="c-observed" type="datetime-local">
+        </div>
+        <fieldset class="form-section">
+          <legend>Footprint bounding box (optional)</legend>
+          <div class="form-group">
+            <label>Lat Min</label>
+            <input id="c-fp-lat-min" type="number" step="any">
+          </div>
+          <div class="form-group">
+            <label>Lat Max</label>
+            <input id="c-fp-lat-max" type="number" step="any">
+          </div>
+          <div class="form-group">
+            <label>Lon Min</label>
+            <input id="c-fp-lon-min" type="number" step="any">
+          </div>
+          <div class="form-group">
+            <label>Lon Max</label>
+            <input id="c-fp-lon-max" type="number" step="any">
+          </div>
+        </fieldset>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="createPoint()">Create</button>
+      </div>
+      <div id="create-response"></div>
+    </div>
+  </div>
+
+  <!-- ─── Search ─────────────────────────────── -->
+  <div class="tab-panel" id="tab-search">
+    <div class="card">
+      <h2><span class="badge badge-get">GET</span> Search Observations</h2>
+      <p class="hint">Fill in one or more fields. Leave blank to skip a filter.</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Name (substring)</label>
+          <input id="s-name" placeholder="leopard">
+        </div>
+        <div class="form-group">
+          <label>ID</label>
+          <input id="s-id" type="number" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>Flight Number</label>
+          <input id="s-flight" type="number" placeholder="101">
+        </div>
+        <div class="form-group">
+          <label>Alt Min</label>
+          <input id="s-alt-min" type="number" step="any">
+        </div>
+        <div class="form-group">
+          <label>Alt Max</label>
+          <input id="s-alt-max" type="number" step="any">
+        </div>
+        <div class="form-group full">
+          <label>Report text (substring)</label>
+          <input id="s-report" placeholder="icy">
+        </div>
+        <fieldset class="form-section">
+          <legend>Observation date range</legend>
+          <div class="form-group">
+            <label>Observed From</label>
+            <input id="s-obs-from" type="date">
+          </div>
+          <div class="form-group">
+            <label>Observed To</label>
+            <input id="s-obs-to" type="date">
+          </div>
+        </fieldset>
+        <fieldset class="form-section">
+          <legend>Footprint search box (all four required together)</legend>
+          <div class="form-group">
+            <label>Lat Min</label>
+            <input id="s-fp-lat-min" type="number" step="any">
+          </div>
+          <div class="form-group">
+            <label>Lat Max</label>
+            <input id="s-fp-lat-max" type="number" step="any">
+          </div>
+          <div class="form-group">
+            <label>Lon Min</label>
+            <input id="s-fp-lon-min" type="number" step="any">
+          </div>
+          <div class="form-group">
+            <label>Lon Max</label>
+            <input id="s-fp-lon-max" type="number" step="any">
+          </div>
+        </fieldset>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="searchPoints()">Search</button>
+      </div>
+      <div id="search-response"></div>
+    </div>
+  </div>
+
+  <!-- ─── By Flight ──────────────────────────── -->
+  <div class="tab-panel" id="tab-flight">
+    <div class="card">
+      <h2><span class="badge badge-get">GET</span> Observations by Flight Number</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Flight Number</label>
+          <input id="f-number" type="number" placeholder="101">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="getByFlight()">Fetch Flight</button>
+      </div>
+      <div id="flight-response"></div>
+    </div>
+  </div>
+
+  <!-- ─── Add Report ─────────────────────────── -->
+  <div class="tab-panel" id="tab-report">
+    <div class="card">
+      <h2><span class="badge badge-post">POST</span> Add Report to Observation</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Observation ID</label>
+          <input id="r-id" type="number" placeholder="1">
+        </div>
+        <div class="form-group full">
+          <label>Report Text</label>
+          <textarea id="r-text" placeholder="Field conditions, sightings, notes…"></textarea>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addReport()">Submit Report</button>
+      </div>
+      <div id="report-response"></div>
+    </div>
+  </div>
+
+  <!-- ─── Health ─────────────────────────────── -->
+  <div class="tab-panel" id="tab-health">
+    <div class="card">
+      <h2><span class="badge badge-get">GET</span> API Health Check</h2>
+      <p class="hint">Returns <code>ok: true</code> when the API and database are working.</p>
+      <div class="actions">
+        <button class="btn btn-orange" onclick="checkHealth()">Run Health Check</button>
+      </div>
+      <div class="health-indicator">
+        <span class="health-dot" id="health-dot"></span>
+        <span id="health-label">Not checked yet</span>
+      </div>
+      <div id="health-response"></div>
+    </div>
+  </div>
+
+  <!-- ─── Docs ───────────────────────────────── -->
+  <div class="tab-panel" id="tab-docs">
+    <div class="card">
+      <h2>API Reference</h2>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="color:#017a4e">GET</td><td>/api/health</td><td style="font-family:var(--sans)">True/false health check</td></tr>
+          <tr><td style="color:#017a4e">GET</td><td>/api/points</td><td style="font-family:var(--sans)">Return all observations</td></tr>
+          <tr><td style="color:var(--orange)">POST</td><td>/api/points</td><td style="font-family:var(--sans)">Create a new observation</td></tr>
+          <tr><td style="color:#017a4e">GET</td><td>/api/points/search?…</td><td style="font-family:var(--sans)">Query by name, date, footprint box, flight, alt ranges, report text</td></tr>
+          <tr><td style="color:#017a4e">GET</td><td>/api/points/flight/&lt;n&gt;</td><td style="font-family:var(--sans)">All observations for a flight number</td></tr>
+          <tr><td style="color:#017a4e">GET</td><td>/api/points/&lt;id&gt;</td><td style="font-family:var(--sans)">Get single observation by ID</td></tr>
+          <tr><td style="color:var(--orange)">PUT</td><td>/api/points/&lt;id&gt;</td><td style="font-family:var(--sans)">Update an observation (partial)</td></tr>
+          <tr><td style="color:var(--red)">DELETE</td><td>/api/points/&lt;id&gt;</td><td style="font-family:var(--sans)">Delete an observation</td></tr>
+          <tr><td style="color:var(--orange)">POST</td><td>/api/points/&lt;id&gt;/reports</td><td style="font-family:var(--sans)">Append a report to an observation</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Observation Schema</h2>
+      <div class="response-body" style="border:1px solid var(--border);border-radius:var(--radius);">{
+  "id":            1,
+  "name":          "Mount Rainier Summit",
+  "lat":           46.8523,
+  "lon":           -121.7603,
+  "alt":           4392.0,
+  "flight_number": 101,
+  "observed_at":   1712345678.0,
+  "footprint": {
+    "lat_min": 46.83, "lat_max": 46.87,
+    "lon_min": -121.78, "lon_max": -121.74
+  },
+  "reports": [
+    { "time": 1712345678.0, "text": "Clear skies." }
+  ]
+}</div>
+    </div>
+
+    <div class="card">
+      <h2>Search Parameters</h2>
+      <table>
+        <thead><tr><th>Param</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>name</td><td>string</td><td style="font-family:var(--sans)">Case-insensitive substring</td></tr>
+          <tr><td>id</td><td>int</td><td style="font-family:var(--sans)">Exact match</td></tr>
+          <tr><td>flight_number</td><td>int</td><td style="font-family:var(--sans)">Exact match</td></tr>
+          <tr><td>lat, lon, alt</td><td>float</td><td style="font-family:var(--sans)">Exact match</td></tr>
+          <tr><td>lat_min / lat_max</td><td>float</td><td style="font-family:var(--sans)">Range filter on observation point</td></tr>
+          <tr><td>lon_min / lon_max</td><td>float</td><td style="font-family:var(--sans)">Range filter on observation point</td></tr>
+          <tr><td>alt_min / alt_max</td><td>float</td><td style="font-family:var(--sans)">Range filter</td></tr>
+          <tr><td>observed_from / observed_to</td><td>date</td><td style="font-family:var(--sans)">Observation date range (ISO date or Unix time)</td></tr>
+          <tr><td>fp_lat_min / fp_lat_max / fp_lon_min / fp_lon_max</td><td>float</td><td style="font-family:var(--sans)">Footprint search box — returns observations whose footprint overlaps it (all 4 required)</td></tr>
+          <tr><td>report_text</td><td>string</td><td style="font-family:var(--sans)">Substring in any report</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── Tab switching ──────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Helpers ────────────────────────────────────
+function showResponse(container, status, data) {
+  const ok = status >= 200 && status < 300;
+  container.innerHTML = `
+    <div class="response-box">
+      <div class="response-header">
+        <span>Response</span>
+        <span class="status ${ok ? 'status-ok' : 'status-err'}">${status}</span>
+      </div>
+      <div class="response-body">${JSON.stringify(data, null, 2)}</div>
+    </div>`;
+}
+
+function fmtTime(unix) {
+  return new Date(unix * 1000).toLocaleString();
+}
+
+function fmtFootprint(fp) {
+  if (!fp) return '—';
+  return `[${fp.lat_min}, ${fp.lon_min}] → [${fp.lat_max}, ${fp.lon_max}]`;
+}
+
+// ── Load all observations ─────────────────────
+async function loadPoints() {
+  const res = await fetch('/api/points');
+  const data = await res.json();
+  const box = document.getElementById('points-table');
+
+  if (!data.points || data.points.length === 0) {
+    box.innerHTML = '<p class="empty">No observations in the database yet.</p>';
+    return;
+  }
+
+  let html = `<table>
+    <thead><tr><th>ID</th><th>Name</th><th>Lat</th><th>Lon</th><th>Alt</th><th>Flight</th><th>Observed</th><th>Footprint</th><th>Reports</th><th></th></tr></thead><tbody>`;
+  data.points.forEach(p => {
+    const reps = (p.reports || []).map(r =>
+      `<li><strong>${fmtTime(r.time)}</strong> — ${r.text}</li>`
+    ).join('');
+    html += `<tr>
+      <td>${p.id}</td>
+      <td style="font-family:var(--sans);font-weight:600">${p.name}</td>
+      <td>${p.lat}</td><td>${p.lon}</td><td>${p.alt}</td>
+      <td>${p.flight_number ?? '—'}</td>
+      <td>${p.observed_at ? fmtTime(p.observed_at) : '—'}</td>
+      <td>${fmtFootprint(p.footprint)}</td>
+      <td><ul class="reports-list">${reps || '<li>—</li>'}</ul></td>
+      <td><button class="btn btn-sm btn-danger" onclick="deletePoint(${p.id})">✕</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  box.innerHTML = html;
+}
+
+// ── Create observation ────────────────────────
+async function createPoint() {
+  const body = {
+    name: document.getElementById('c-name').value,
+    lat: parseFloat(document.getElementById('c-lat').value),
+    lon: parseFloat(document.getElementById('c-lon').value),
+    alt: parseFloat(document.getElementById('c-alt').value),
+  };
+  const flight = document.getElementById('c-flight').value.trim();
+  if (flight) body.flight_number = parseInt(flight, 10);
+  const observed = document.getElementById('c-observed').value;
+  if (observed) body.observed_at = observed;
+
+  const fp = {
+    lat_min: document.getElementById('c-fp-lat-min').value.trim(),
+    lat_max: document.getElementById('c-fp-lat-max').value.trim(),
+    lon_min: document.getElementById('c-fp-lon-min').value.trim(),
+    lon_max: document.getElementById('c-fp-lon-max').value.trim(),
+  };
+  if (Object.values(fp).some(v => v !== '')) {
+    body.footprint = {
+      lat_min: parseFloat(fp.lat_min), lat_max: parseFloat(fp.lat_max),
+      lon_min: parseFloat(fp.lon_min), lon_max: parseFloat(fp.lon_max),
+    };
+  }
+
+  const res = await fetch('/api/points', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+  });
+  showResponse(document.getElementById('create-response'), res.status, await res.json());
+}
+
+// ── Search observations ───────────────────────
+async function searchPoints() {
+  const params = new URLSearchParams();
+  const map = {
+    's-name':'name','s-id':'id','s-flight':'flight_number',
+    's-alt-min':'alt_min','s-alt-max':'alt_max',
+    's-obs-from':'observed_from','s-obs-to':'observed_to',
+    's-fp-lat-min':'fp_lat_min','s-fp-lat-max':'fp_lat_max',
+    's-fp-lon-min':'fp_lon_min','s-fp-lon-max':'fp_lon_max',
+    's-report':'report_text'
+  };
+  for (const [elId, param] of Object.entries(map)) {
+    const v = document.getElementById(elId).value.trim();
+    if (v) params.append(param, v);
+  }
+  const res = await fetch('/api/points/search?' + params.toString());
+  showResponse(document.getElementById('search-response'), res.status, await res.json());
+}
+
+// ── Get by flight number ──────────────────────
+async function getByFlight() {
+  const n = document.getElementById('f-number').value.trim();
+  if (!n) return;
+  const res = await fetch(`/api/points/flight/${n}`);
+  showResponse(document.getElementById('flight-response'), res.status, await res.json());
+}
+
+// ── Health check ──────────────────────────────
+async function checkHealth() {
+  const dot = document.getElementById('health-dot');
+  const label = document.getElementById('health-label');
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    const ok = data.ok === true;
+    dot.className = 'health-dot ' + (ok ? 'ok' : 'fail');
+    label.textContent = ok ? `true — API working (${data.observations} observations)` : 'false — API problem';
+    showResponse(document.getElementById('health-response'), res.status, data);
+  } catch (e) {
+    dot.className = 'health-dot fail';
+    label.textContent = 'false — API unreachable';
+  }
+}
+
+// ── Add report ────────────────────────────────
+async function addReport() {
+  const id = document.getElementById('r-id').value;
+  const body = { text: document.getElementById('r-text').value };
+  const res = await fetch(`/api/points/${id}/reports`, {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+  });
+  showResponse(document.getElementById('report-response'), res.status, await res.json());
+}
+
+// ── Delete observation ────────────────────────
+async function deletePoint(id) {
+  if (!confirm(`Delete observation ${id}?`)) return;
+  await fetch(`/api/points/${id}`, { method: 'DELETE' });
+  loadPoints();
+}
+</script>
+
+</body>
+</html>
